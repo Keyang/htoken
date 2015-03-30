@@ -1,11 +1,25 @@
 {
   "name": "htoken",
-  "description":"CLI(and Lib) for HOTP (RFC 4226) google authenticator token. With AES 256 encryption",
-  "author":"Keyang Xiang<keyang.xiang@gmail.com>",
-  "version":"0.1.1",
+  "description": "CLI(and Lib) for HOTP (RFC 4226) google authenticator token. With AES 256 encryption",
+  "author": "Keyang Xiang <keyang.xiang@gmail.com>",
+  "version": "0.1.2",
   "dependencies": {
     "read": "^1.0.5",
     "thirty-two": "0.0.2"
   },
-  "bin":"./cli/rhtoken"
+  "bin": "./cli/rhtoken",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Keyang/node-csvtojson.git"
+  },
+  "homepage": "https://github.com/Keyang/node-csvtojson",
+  "bugs": "https://github.com/Keyang/htoken/issues",
+  "license": [{
+    "type": "MIT",
+    "url": "https://github.com/Keyang/htoken/blob/master/LICENSE"
+  }],
+  "engines": {
+    "node": ">=0.10"
+  }
+
 }
