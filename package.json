@@ -1,0 +1,11 @@
+{
+  "name": "htoken",
+  "description":"CLI(and Lib) for HOTP (RFC 4226) google authenticator token",
+  "author":"Keyang Xiang<keyang.xiang@gmail.com>",
+  "version":"0.1.0",
+  "dependencies": {
+    "read": "^1.0.5",
+    "thirty-two": "0.0.2"
+  },
+  "bin":"./cli/rhtoken"
+}

@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+var fs = require("fs");
+var home = (process.env.HOME || process.env.USERPROFILE);
+var cfg = home+ "/.rhtoken.json";
+var read = require("read");
+var url = require("url");
+var hotp = require("../auth.js");
+
+function checkCfg(cb) {
+  if (!fs.existsSync(cfg)) {
+    console.log("Config file not found at %s", cfg);
+    console.log("Create config file.");
+    initCfg();
+  } else {
+    cb();
+  }
+}
+
+function initCfg(cb) {
+  var obj = {
+    url: "",
+    counter: 0,
+    key: "",
+    "length": 6
+  };
+  read({
+    "prompt": "Enter the oauth link (The link in QR code):"
+  }, function(err, d) {
+    obj.url = d;
+    var query = url.parse(unescape(d)).query;
+    var qArr = query.split("&");
+    for (var i = 0; i < qArr.length; i++) {
+      var o = qArr[i];
+      var key = o.split("=")[0];
+      var val = o.split("=")[1];
+      if (key.toLowerCase() === "secret") {
+        obj.key = val;
+      }
+    }
+    if (obj.key === "") {
+      console.log("Secrekey not found in url: %s", d);
+      process.exit(1);
+    }
+    read({
+      "prompt": "Enter the passcode length (6 is defaul):"
+    }, function(err, d) {
+      if (d && isNumber(d)) {
+        obj.length = parseInt(d);
+      }
+      fs.writeFileSync(cfg, JSON.stringify(obj, null, 2));
+      console.log("Config setup successfully. Run rhtoken again to get the token.");
+    });
+
+  });
+}
+
+function run() {
+  var cfgO = require(cfg);
+  console.log(hotp(cfgO.key, cfgO.counter, cfgO.length));
+  cfgO.counter++;
+  fs.writeFileSync(cfg, JSON.stringify(cfgO, null, 2));
+}
+checkCfg(function() {
+  run();
+});
