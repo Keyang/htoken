@@ -2,10 +2,13 @@
 
 var fs = require("fs");
 var home = (process.env.HOME || process.env.USERPROFILE);
-var cfg = home+ "/.rhtoken.json";
+var cfg = home + "/.rhtoken.json";
 var read = require("read");
 var url = require("url");
 var hotp = require("../auth.js");
+var crypto = require("crypto");
+var Buffer = require("buffer").Buffer;
+var alg = "aes256";
 
 function checkCfg(cb) {
   if (!fs.existsSync(cfg)) {
@@ -37,6 +40,9 @@ function initCfg(cb) {
       if (key.toLowerCase() === "secret") {
         obj.key = val;
       }
+      if (key.toLowerCase() ==="counter"){
+        obj.counter=parseInt(val);
+      }
     }
     if (obj.key === "") {
       console.log("Secrekey not found in url: %s", d);
@@ -48,18 +54,69 @@ function initCfg(cb) {
       if (d && isNumber(d)) {
         obj.length = parseInt(d);
       }
-      fs.writeFileSync(cfg, JSON.stringify(obj, null, 2));
-      console.log("Config setup successfully. Run rhtoken again to get the token.");
+      read({
+        "prompt": "Enter password to protect your key (Enter to leave it empty): ",
+        "silent": true
+      }, function(err, d) {
+        storeAndEncrypt(obj,d);
+        console.log("Config setup successfully. Run rhtoken again to get the token.");
+      });
     });
 
   });
 }
 
+function encrypt(data, pwd) {
+  var enc = crypto.createCipher(alg, pwd);
+  var buf = enc.update(data);
+  buf = Buffer.concat([buf, enc.final()]);
+  return buf;
+}
+
+function decrypt(buf, pwd) {
+  try {
+    var dec = crypto.createDecipher(alg, pwd);
+    var oBuf = dec.update(buf);
+    oBuf = Buffer.concat([oBuf, dec.final()]);
+    return oBuf.toString("utf8");
+  } catch (e) {
+    console.log("Decryption error. Possibly password incorrect.");
+    console.error(e.stack);
+    process.exit(1);
+  }
+}
+
 function run() {
-  var cfgO = require(cfg);
-  console.log(hotp(cfgO.key, cfgO.counter, cfgO.length));
-  cfgO.counter++;
-  fs.writeFileSync(cfg, JSON.stringify(cfgO, null, 2));
+  var cfgO = {};
+  var data = fs.readFileSync(cfg);
+  try {
+    cfgO = JSON.parse(data.toString("utf8"));
+    rollToken(cfgO);
+  } catch (e) {
+    read({
+      "prompt": "Enter password: ",
+      "silent": true
+    }, function(err, d) {
+      data = JSON.parse(decrypt(data, d));
+      rollToken(data,d);
+    });
+  }
+}
+
+function storeAndEncrypt(data, pwd) {
+  if (typeof data === "object"){
+    data = JSON.stringify(data, null, 2);
+  }
+  if (pwd && pwd.length > 0) {
+    data = encrypt(data, pwd);
+  }
+  fs.writeFileSync(cfg, data);
+}
+
+function rollToken(cfgData, pwd) {
+  console.log(hotp(cfgData.key, cfgData.counter, cfgData.length));
+  cfgData.counter++;
+  storeAndEncrypt(cfgData,pwd);
 }
 checkCfg(function() {
   run();
