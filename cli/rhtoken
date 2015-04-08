@@ -49,7 +49,7 @@ function initCfg(cb) {
       process.exit(1);
     }
     read({
-      "prompt": "Enter the passcode length (6 is defaul):"
+      "prompt": "Enter the passcode length (6 is default):"
     }, function(err, d) {
       if (d && isNumber(d)) {
         obj.length = parseInt(d);
@@ -59,7 +59,7 @@ function initCfg(cb) {
         "silent": true
       }, function(err, d) {
         storeAndEncrypt(obj,d);
-        console.log("Config setup successfully. Run rhtoken again to get the token.");
+        console.log("Config setup successfully. Run htoken again to get the token.");
       });
     });
 
