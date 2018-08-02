@@ -51,7 +51,7 @@ function initCfg(cb) {
     read({
       "prompt": "Enter the passcode length (6 is default):"
     }, function(err, d) {
-      if (d && isNumber(d)) {
+      if (d) {
         obj.length = parseInt(d);
       }
       read({
